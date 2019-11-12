@@ -2,14 +2,18 @@ const aws = require("aws-sdk");
 const dynamo = new aws.DynamoDB.DocumentClient();
 const ses = new aws.SES();
 aws.config.update({ region: "us-east-1" });
+const uuid = require("uuid/v4");
 
 exports.handler = (event, context, callback) => {
   var searchParams = {
     TableName: "testLambda",
     Key: {
-      id: event.Records[0].Sns.MessageId
+      id: event.Records[0].Sns.Message
     }
   };
+  /* first we get the item from dynamo and check if email exists
+    if does not exist put the item and send an email,
+    */
   dynamo.get(searchParams, function(error, data1) {
     if (error) {
       console.log("Error in get", error);
@@ -20,6 +24,11 @@ exports.handler = (event, context, callback) => {
       if (data1.Item == null || data1.Item == undefined) {
         isPresent = false;
       } else {
+        /*
+          if email exists check if ttl > currentTime,
+          if ttl is greater than current time do nothing,
+          else send email
+        */
         if (data1.Item.ttl > new Date().getTime()) {
           isPresent = true;
         }
@@ -30,8 +39,8 @@ exports.handler = (event, context, callback) => {
         let expiry = currentTime + ttl;
         var params = {
           Item: {
-            id: event.Records[0].Sns.MessageId,
-            token: event.Records[0].Sns.Message,
+            id: event.Records[0].Sns.Message,
+            token: uuid(),
             ttl: expiry
           },
           TableName: "testLambda"
