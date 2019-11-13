@@ -1,0 +1,28 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:7.10
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+    steps:
+      - checkout
+      - run:
+          name: Install Packages
+          command: |
+            sudo apt-get update && sudo apt-get install wget zip unzip -y
+            sudo apt-get install -y python3-pip
+            sudo pip3 install awscli
+      - run:
+          name: Zip Artifact
+          command: |
+            zip index.zip index.js
+      
