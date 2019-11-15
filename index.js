@@ -4,13 +4,23 @@ const ses = new aws.SES();
 aws.config.update({ region: "us-east-1" });
 const uuid = require("uuid/v4");
 
+// Expected message format:
+// {
+//   "from": "noreply@dev.tejasshah.me",
+//   "to": "tej230@gmail.com",
+//   "recipes": ["123456", "789", "xyz"]
+// }
+
 exports.handler = (event, context, callback) => {
+  console.log("Executing lambda function...");
+  let message = JSON.parse(event.Records[0].Sns.Message);
   var searchParams = {
-    TableName: "testLambda",
+    TableName: "csye6225",
     Key: {
-      id: event.Records[0].Sns.Message
+      id: message.to
     }
   };
+  console.log("Checking if record already present in db");
   /* first we get the item from dynamo and check if email exists
     if does not exist put the item and send an email,
     */
@@ -39,11 +49,13 @@ exports.handler = (event, context, callback) => {
         let expiry = currentTime + ttl;
         var params = {
           Item: {
-            id: event.Records[0].Sns.Message,
+            id: message.to,
             token: uuid(),
-            ttl: expiry
+            ttl: expiry,
+            from: message.from,
+            recipes: message.recipes
           },
-          TableName: "testLambda"
+          TableName: "csye6225"
         };
 
         dynamo.put(params, function(error, data) {
@@ -51,20 +63,20 @@ exports.handler = (event, context, callback) => {
             console.log("Error", error);
           } else {
             console.log("Success", data);
+            const recipeString = params.Item.recipes.reduce((recipeString, recipe) => {
+              return recipeString + recipe + "\n";
+            }, "");
             var emailParams = {
               Destination: {
-                /* required */
                 ToAddresses: [
-                  "dedhia.j@husky.neu.edu"
-                  /* more items */
+                  params.Item.id
                 ]
               },
               Message: {
-                /* required */
                 Body: {
                   Text: {
                     Charset: "UTF-8",
-                    Data: "hello"
+                    Data: `You have created the following recipes: \n${recipeString}`
                   }
                 },
                 Subject: {
@@ -72,12 +84,12 @@ exports.handler = (event, context, callback) => {
                   Data: "Your list of recipes"
                 }
               },
-              Source: "no-reply@dev.ishitasequeira.me" /* required */
+              Source: params.Item.from
             };
             var sendPromise = ses.sendEmail(emailParams).promise();
             sendPromise
-              .then(function(data) {
-                console.log(data);
+              .then(function(data2) {
+                console.log(data2);
               })
               .catch(function(err) {
                 console.error(err, err.stack);
