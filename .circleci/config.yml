@@ -30,6 +30,6 @@ jobs:
               --deployment-config-name lambda_code_deploy_configuration \
               --deployment-group-name "csye6225-lambda-deployment" \
               --description "CSYE6225 - Codedeploy Lambda" \
-              --s3-location bucket=${S3_LAMBDA_BUCKET},key=appspec-${CIRCLE_BUILD_NUM}.yaml,bundleType=YAML \
+              --s3-location bucket=${S3_LAMBDA_BUCKET},key=CodeDeploy/appspec-${CIRCLE_BUILD_NUM}.yaml,bundleType=YAML \
               --region us-east-1 \
               --output json
