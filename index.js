@@ -45,7 +45,7 @@ exports.handler = (event, context, callback) => {
       }
       if (!isPresent) {
         let currentTime = new Date().getTime();
-        let ttl = 30 * 60 * 1000;
+        let ttl = process.env.timeToLive * 60 * 1000;
         let expiry = currentTime + ttl;
         var params = {
           Item: {
