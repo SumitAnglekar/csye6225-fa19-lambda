@@ -30,20 +30,3 @@ jobs:
           name: Update lambdaFunction code
           command: |
             aws lambda update-function-code --function-name lambda_function_name --region us-east-1 --zip-file fileb://csye6225-lambda-${CIRCLE_BUILD_NUM}.zip
-
-            
-      # - run:
-      #     name: Upload artifact to S3
-      #     command: |
-      #       aws s3 cp appspec.yaml s3://${S3_LAMBDA_BUCKET}/CodeDeploy/appspec-${CIRCLE_BUILD_NUM}.yaml
-      # - run:
-      #     name: CodeDelopy API Call
-      #     command: |
-      #       aws deploy create-deployment \
-      #         --application-name csye6225-lambda \
-      #         --deployment-config-name lambda_code_deploy_configuration \
-      #         --deployment-group-name "csye6225-lambda-deployment" \
-      #         --description "CSYE6225 - Codedeploy Lambda" \
-      #         --s3-location bucket=${S3_LAMBDA_BUCKET},key=appspec-${CIRCLE_BUILD_NUM}.yaml,bundleType=YAML \
-      #         --region us-east-1 \
-      #         --output json
