@@ -1,0 +1,32 @@
+
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:7.10
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+    steps:
+      - checkout
+      - run:
+          name: Install Packages
+          command: |
+            sudo apt-get update && sudo apt-get install wget zip unzip -y
+            sudo apt-get install -y python3-pip
+            sudo pip3 install awscli
+      - run:
+          name: Zip Artifact
+          command: |
+            zip csye6225-lambda-${CIRCLE_BUILD_NUM}.zip index.js
+      - run:
+          name: Upload zip to S3
+          command: |
+            aws s3 cp csye6225-lambda-${CIRCLE_BUILD_NUM}.zip s3://${S3_LAMBDA_BUCKET}/csye6225-lambda-${CIRCLE_BUILD_NUM}.zip
+      - run:
+          name: Update lambdaFunction code
+          command: |
+            aws lambda update-function-code --function-name lambda_function_name --region us-east-1 --zip-file fileb://csye6225-lambda-${CIRCLE_BUILD_NUM}.zip
